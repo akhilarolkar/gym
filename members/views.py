@@ -32,6 +32,7 @@ def member_list(request):
         if action == 'add':
             name = request.POST.get('name')
             email = request.POST.get('email')
+            phone_number = request.POST.get('phone_number')
             join_date_str = request.POST.get('join_date')
             membership_type = request.POST.get('membership_type')
             membership_start_date = request.POST.get('membership_start_date')
@@ -50,7 +51,7 @@ def member_list(request):
                 return redirect('member_list')
             try:
                 Member.objects.create(
-                    name=name, email=email, join_date=join_date, membership_type=membership_type,
+                    name=name, email=email, phone_number=phone_number, join_date=join_date, membership_type=membership_type,
                     membership_start_date=membership_start_date, membership_end_date=membership_end_date, is_active=is_active
                 )
             except IntegrityError:
@@ -65,6 +66,7 @@ def member_list(request):
                 messages.error(request, 'Please enter valid email address.')
                 return redirect('member_list')
             member.email = email
+            member.phone_number = request.POST.get('phone_number')
             join_date_str = request.POST.get('join_date')
             try:
                 join_date = datetime.strptime(join_date_str, '%Y-%m-%d').date()
@@ -113,6 +115,7 @@ def add_member(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
         join_date_str = request.POST.get('join_date')
         membership_type = request.POST.get('membership_type')
         membership_start_date = request.POST.get('membership_start_date')
@@ -128,7 +131,7 @@ def add_member(request):
             return render(request, 'members/add_member.html', {'error': 'Invalid join date format.'})
         try:
             Member.objects.create(
-                name=name, email=email, join_date=join_date, membership_type=membership_type,
+                name=name, email=email, phone_number=phone_number, join_date=join_date, membership_type=membership_type,
                 membership_start_date=membership_start_date, membership_end_date=membership_end_date, is_active=is_active
             )
         except IntegrityError:

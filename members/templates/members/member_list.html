@@ -19,7 +19,7 @@
 
     <!-- Statistics Cards -->
     <div class="row mb-4 justify-content-center">
-        <div class="col-md-3 mb-3">
+        <div class="col-md-4 mb-3">
             <div class="card text-white bg-primary h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-users fa-2x mb-2"></i>
@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-4 mb-3">
             <div class="card text-white bg-success h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-user-check fa-2x mb-2"></i>
@@ -37,7 +37,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
+        <div class="col-md-4 mb-3">
             <div class="card text-white bg-warning h-100">
                 <div class="card-body text-center">
                     <i class="fas fa-user-times fa-2x mb-2"></i>
@@ -102,6 +102,7 @@
                         <tr>
                             <th><i class="fas fa-user me-2"></i>Name</th>
                             <th><i class="fas fa-envelope me-2"></i>Email</th>
+                            <th><i class="fas fa-phone me-2"></i>Phone</th>
                             <th><i class="fas fa-calendar-alt me-2"></i>Join Date</th>
                             <th><i class="fas fa-id-card me-2"></i>Membership Type</th>
                             <th><i class="fas fa-calendar-plus me-2"></i>Membership Start Date</th>
@@ -115,6 +116,7 @@
                         <tr>
                             <td class="fw-bold text-primary">{{ member.name }}</td>
                             <td>{{ member.email }}</td>
+                            <td>{{ member.phone_number|default:"-" }}</td>
                             <td>{{ member.join_date|date:"d/m/Y" }}</td>
                             <td>
                                 <span class="badge bg-secondary">{{ member.membership_type }}</span>
@@ -129,7 +131,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editMemberModal" onclick="editMember({{ member.id }}, '{{ member.name|escapejs }}', '{{ member.email|escapejs }}', '{{ member.join_date|date:"Y-m-d" }}', '{{ member.membership_type|escapejs }}', '{{ member.membership_start_date|date:"Y-m-d" }}', '{{ member.membership_end_date|date:"Y-m-d" }}', {{ member.is_active|lower }})">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editMemberModal" onclick="editMember({{ member.id }}, '{{ member.name|escapejs }}', '{{ member.email|escapejs }}', '{{ member.phone_number|escapejs }}', '{{ member.join_date|date:"Y-m-d" }}', '{{ member.membership_type|escapejs }}', '{{ member.membership_start_date|date:"Y-m-d" }}', '{{ member.membership_end_date|date:"Y-m-d" }}', {{ member.is_active|lower }})">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteMemberModal" onclick="setDeleteMember({{ member.id }}, '{{ member.name|escapejs }}')">
@@ -140,7 +142,7 @@
                         {% endfor %}
                         {% if not members and search_query %}
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 <i class="fas fa-search me-2"></i>No members found matching "{{ search_query }}"
                             </td>
                         </tr>
@@ -179,6 +181,13 @@
                                 <i class="fas fa-envelope me-2"></i>Email
                             </label>
                             <input type="email" class="form-control form-control-lg" id="email" name="email" required
+                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">
+                                <i class="fas fa-phone me-2"></i>Phone Number
+                            </label>
+                            <input type="tel" class="form-control form-control-lg" id="phone_number" name="phone_number"
                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
                         </div>
                         <div class="mb-3">
@@ -360,10 +369,11 @@
         });
 
         // Edit member function
-        function editMember(id, name, email, joinDate, membershipType, startDate, endDate, isActive) {
+        function editMember(id, name, email, phoneNumber, joinDate, membershipType, startDate, endDate, isActive) {
             document.getElementById('edit_member_id').value = id;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_email').value = email;
+            document.getElementById('edit_phone_number').value = phoneNumber;
             document.getElementById('edit_join_date').value = joinDate;
             document.getElementById('edit_membership_type').value = membershipType;
             document.getElementById('edit_membership_start_date').value = startDate;
