@@ -1,11 +1,11 @@
-# TODO: Add Phone Number to Members
+# Add Pagination to Member List Table
 
-- [ ] Add phone_number CharField to Member model in models.py (max_length=15, blank=True)
-- [ ] Update views.py: Handle phone_number in add_member view
-- [ ] Update views.py: Handle phone_number in member_list view (add and update actions)
-- [ ] Update add_member.html: Add phone number input field to the form
-- [ ] Update member_list.html: Add Phone column to table header and rows
-- [ ] Update member_list.html: Add phone number fields to add and edit modals
-- [ ] Update member_list.html: Update JavaScript editMember function to populate phone field
-- [ ] Run Django migrations: makemigrations and migrate
-- [ ] Test adding and editing members to verify phone number functionality
+## Tasks
+- [x] Modify `views.py` to implement pagination using Django's Paginator (10 entries per page)
+- [x] Update `member_list.html` template to use paginated data and add pagination controls
+- [x] Test pagination functionality
+
+## Details
+- Paginate after 10 entries in the member detail table
+- Use Django's built-in Paginator class
+- Add pagination links in the template

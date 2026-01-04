@@ -6,6 +6,7 @@ from django.db.models import Q, Count
 from django.utils import timezone
 from datetime import datetime
 from django.db import IntegrityError
+from django.core.paginator import Paginator
 from .models import Member
 
 def login_view(request):
@@ -97,8 +98,11 @@ def member_list(request):
     active_members = Member.objects.filter(is_active=True).count()
     inactive_members = total_members - active_members
     membership_types = Member.objects.values('membership_type').annotate(count=Count('membership_type')).order_by('-count')
+    paginator = Paginator(members, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
-        'members': members,
+        'members': page_obj,
         'search_query': search_query,
         'total_members': total_members,
         'active_members': active_members,
