@@ -1,0 +1,128 @@
+{% extends 'members/base.html' %}
+
+{% block title %}Add Member - Gym Management{% endblock %}
+
+{% block content %}
+<div class="content-wrapper mx-auto" style="max-width: 600px;">
+    <div class="text-center mb-4">
+        <h1 class="mb-0"><i class="fas fa-user-plus me-2"></i>Add New Member</h1>
+        <p class="text-muted">Fill in the details to add a new gym member.</p>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                <p>{{ error }}</p>
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label for="name" class="form-label">
+                    <i class="fas fa-user me-2"></i>Name
+                </label>
+                <input type="text" class="form-control form-control-lg" id="name" name="name" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                       aria-describedby="nameHelp">
+                <div id="nameHelp" class="form-text">Enter the full name of the member.</div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope me-2"></i>Email
+                </label>
+                <input type="email" class="form-control form-control-lg" id="email" name="email" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                       aria-describedby="emailHelp">
+                <div id="emailHelp" class="form-text">Enter a valid email address.</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label for="join_date" class="form-label">
+                    <i class="fas fa-calendar-alt me-2"></i>Join Date
+                </label>
+                <input type="date" class="form-control form-control-lg" id="join_date" name="join_date" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                       aria-describedby="joinDateHelp">
+                <div id="joinDateHelp" class="form-text">Select the date the member joined.</div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <label for="membership_type" class="form-label">
+                    <i class="fas fa-id-card me-2"></i>Membership Type
+                </label>
+                <select class="form-select form-select-lg" id="membership_type" name="membership_type" required
+                        style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                        aria-describedby="membershipTypeHelp">
+                    <option value="">Choose...</option>
+                    <option value="strength">Strength</option>
+                    <option value="cardio">Cardio</option>
+                    <option value="crossfit">Crossfit</option>
+                </select>
+                <div id="membershipTypeHelp" class="form-text">Select the type of membership.</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label for="membership_start_date" class="form-label">
+                    <i class="fas fa-calendar-plus me-2"></i>Membership Start Date
+                </label>
+                <input type="date" class="form-control form-control-lg" id="membership_start_date" name="membership_start_date" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                       aria-describedby="startDateHelp">
+                <div id="startDateHelp" class="form-text">When does the membership start?</div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <label for="membership_end_date" class="form-label">
+                    <i class="fas fa-calendar-times me-2"></i>Membership End Date
+                </label>
+                <input type="date" class="form-control form-control-lg" id="membership_end_date" name="membership_end_date" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                       aria-describedby="endDateHelp">
+                <div id="endDateHelp" class="form-text">When does the membership expire?</div>
+            </div>
+        </div>
+        <div class="mb-4 form-check">
+            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked
+                   style="border-radius: 4px; border: 2px solid #e9ecef;">
+            <label class="form-check-label" for="is_active">
+                <i class="fas fa-toggle-on me-2"></i>Is Active
+            </label>
+            <div class="form-text">Check if the member is currently active.</div>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn-modern me-2">
+                <i class="fas fa-save me-2"></i>Add Member
+            </button>
+            <a href="{% url 'member_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const inputs = document.querySelectorAll('input, select');
+
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#667eea';
+                this.style.boxShadow = '0 0 0 0.2rem rgba(102, 126, 234, 0.25)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.borderColor = '#e9ecef';
+                this.style.boxShadow = 'none';
+            });
+        });
+
+
+
+        // Auto-focus on name field
+        document.getElementById('name').focus();
+    });
+</script>
+{% endblock %}

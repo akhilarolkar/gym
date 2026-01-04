@@ -1,0 +1,2 @@
+- [ ] Create requirements.txt with Django and gunicorn
+- [ ] Create Dockerfile for the Django project
