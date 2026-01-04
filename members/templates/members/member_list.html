@@ -86,8 +86,8 @@
             <div class="mb-3">
                 <form method="get" class="d-flex">
                     <input type="text" name="search" class="form-control me-2" placeholder="Search members by name or email..." value="{{ search_query }}">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="fas fa-search me-1"></i>Search
+                    <button type="submit" class="btn btn-outline-primary" aria-label="Search">
+                        <i class="fas fa-search"></i>
                     </button>
                     {% if search_query %}
                         <a href="{% url 'member_list' %}" class="btn btn-outline-secondary ms-2">
