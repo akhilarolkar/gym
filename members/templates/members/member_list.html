@@ -90,8 +90,8 @@
                         <i class="fas fa-search"></i>
                     </button>
                     {% if search_query %}
-                        <a href="{% url 'member_list' %}" class="btn btn-outline-secondary ms-2">
-                            <i class="fas fa-times me-1"></i>Clear
+                        <a href="{% url 'member_list' %}" class="btn btn-outline-secondary ms-2" aria-label="Clear">
+                            <i class="fas fa-times"></i>
                         </a>
                     {% endif %}
                 </form>
