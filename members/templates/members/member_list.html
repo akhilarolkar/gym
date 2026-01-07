@@ -84,17 +84,22 @@
             </div>
         {% else %}
             <div class="mb-3">
-                <form method="get" class="d-flex">
-                    <input type="text" name="search" class="form-control me-2" placeholder="Search members by name or email..." value="{{ search_query }}">
-                    <button type="submit" class="btn btn-outline-primary" aria-label="Search">
-                        <i class="fas fa-search"></i>
-                    </button>
-                    {% if search_query %}
-                        <a href="{% url 'member_list' %}" class="btn btn-outline-secondary ms-2" aria-label="Clear">
-                            <i class="fas fa-times"></i>
-                        </a>
-                    {% endif %}
-                </form>
+                <div class="d-flex justify-content-between align-items-center">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" placeholder="Search members by name or email..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-outline-primary" aria-label="Search">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        {% if search_query %}
+                            <a href="{% url 'member_list' %}" class="btn btn-outline-secondary ms-2" aria-label="Clear">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        {% endif %}
+                    </form>
+                    <a href="{% url 'export_excel' %}" class="btn btn-success" aria-label="Export to Excel">
+                        <i class="fas fa-file-excel me-2"></i>Export to Excel
+                    </a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
@@ -103,10 +108,12 @@
                             <th><i class="fas fa-user me-2"></i>Name</th>
                             <th><i class="fas fa-envelope me-2"></i>Email</th>
                             <th><i class="fas fa-phone me-2"></i>Phone</th>
-                            <th><i class="fas fa-calendar-alt me-2"></i>Join Date</th>
-                            <th><i class="fas fa-id-card me-2"></i>Membership Type</th>
-                            <th><i class="fas fa-calendar-plus me-2"></i>Membership Start Date</th>
-                            <th><i class="fas fa-calendar-times me-2"></i>Membership End Date</th>
+                            <th><i class="fas fa-birthday-cake me-2"></i>D.O.B</th>
+                            <th><i class="fas fa-venus-mars me-2"></i></th>
+                            <th><i class="fas fa-calendar-alt me-2"></i>Joined On</th>
+                            <th><i class="fas fa-id-card me-2"></i>Program</th>
+                            <th><i class="fas fa-calendar-plus me-2"></i>Membership Start</th>
+                            <th><i class="fas fa-calendar-times me-2"></i>Membership End</th>
                             <th><i class="fas fa-toggle-on me-2"></i>Status</th>
                             <th><i class="fas fa-cogs me-2"></i>Actions</th>
                         </tr>
@@ -117,6 +124,10 @@
                             <td class="fw-bold text-primary">{{ member.name }}</td>
                             <td>{{ member.email }}</td>
                             <td>{{ member.phone_number|default:"-" }}</td>
+                            <td>{{ member.dob|date:"d/m/Y"|default:"-" }}</td>
+                            <td>
+                                {% if member.gender == "Male" %}M{% elif member.gender == "Female" %}F{% elif member.gender == "Other" %}O{% else %}-{% endif %}
+                            </td>
                             <td>{{ member.join_date|date:"d/m/Y" }}</td>
                             <td>
                                 <span class="badge bg-secondary">{{ member.membership_type }}</span>
@@ -131,7 +142,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editMemberModal" onclick="editMember({{ member.id }}, '{{ member.name|escapejs }}', '{{ member.email|escapejs }}', '{{ member.phone_number|escapejs }}', '{{ member.join_date|date:"Y-m-d" }}', '{{ member.membership_type|escapejs }}', '{{ member.membership_start_date|date:"Y-m-d" }}', '{{ member.membership_end_date|date:"Y-m-d" }}', {{ member.is_active|lower }})">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editMemberModal" onclick="editMember({{ member.id }}, '{{ member.name|escapejs }}', '{{ member.email|escapejs }}', '{{ member.phone_number|escapejs }}', '{{ member.dob|date:"Y-m-d"|default:"" }}', '{{ member.gender|escapejs }}', '{{ member.join_date|date:"Y-m-d" }}', '{{ member.membership_type|escapejs }}', '{{ member.membership_start_date|date:"Y-m-d" }}', '{{ member.membership_end_date|date:"Y-m-d" }}', {{ member.is_active|lower }})">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteMemberModal" onclick="setDeleteMember({{ member.id }}, '{{ member.name|escapejs }}')">
@@ -142,7 +153,7 @@
                         {% endfor %}
                         {% if not members and search_query %}
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
+                            <td colspan="11" class="text-center text-muted py-4">
                                 <i class="fas fa-search me-2"></i>No members found matching "{{ search_query }}"
                             </td>
                         </tr>
@@ -233,6 +244,25 @@
                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
                         </div>
                         <div class="mb-3">
+                            <label for="dob" class="form-label">
+                                <i class="fas fa-birthday-cake me-2"></i>DOB
+                            </label>
+                            <input type="date" class="form-control form-control-lg" id="dob" name="dob"
+                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">
+                                <i class="fas fa-venus-mars me-2"></i>Gender
+                            </label>
+                            <select class="form-select form-select-lg" id="gender" name="gender"
+                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <option value="">Choose...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="join_date" class="form-label">
                                 <i class="fas fa-calendar-alt me-2"></i>Join Date
                             </label>
@@ -313,6 +343,32 @@
                             </label>
                             <input type="email" class="form-control form-control-lg" id="edit_email" name="email" required
                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_phone_number" class="form-label">
+                                <i class="fas fa-phone me-2"></i>Phone Number
+                            </label>
+                            <input type="tel" class="form-control form-control-lg" id="edit_phone_number" name="phone_number"
+                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_dob" class="form-label">
+                                <i class="fas fa-birthday-cake me-2"></i>DOB
+                            </label>
+                            <input type="date" class="form-control form-control-lg" id="edit_dob" name="dob"
+                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_gender" class="form-label">
+                                <i class="fas fa-venus-mars me-2"></i>Gender
+                            </label>
+                            <select class="form-select form-select-lg" id="edit_gender" name="gender"
+                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <option value="">Choose...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="edit_join_date" class="form-label">
@@ -411,11 +467,13 @@
         });
 
         // Edit member function
-        function editMember(id, name, email, phoneNumber, joinDate, membershipType, startDate, endDate, isActive) {
+        function editMember(id, name, email, phoneNumber, dob, gender, joinDate, membershipType, startDate, endDate, isActive) {
             document.getElementById('edit_member_id').value = id;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_email').value = email;
             document.getElementById('edit_phone_number').value = phoneNumber;
+            document.getElementById('edit_dob').value = dob;
+            document.getElementById('edit_gender').value = gender;
             document.getElementById('edit_join_date').value = joinDate;
             document.getElementById('edit_membership_type').value = membershipType;
             document.getElementById('edit_membership_start_date').value = startDate;

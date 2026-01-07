@@ -16,6 +16,8 @@ class Member(models.Model):
     membership_type = models.CharField(max_length=50)
     membership_start_date = models.DateField(default=timezone.now)
     membership_end_date = models.DateField()
+    dob = models.DateField(blank=True, null=True, verbose_name="Date of Birth")
+    gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):

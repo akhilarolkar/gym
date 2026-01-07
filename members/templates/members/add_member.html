@@ -46,6 +46,31 @@
                        aria-describedby="phoneHelp">
                 <div id="phoneHelp" class="form-text">Enter the phone number (optional).</div>
             </div>
+            <div class="col-md-6 mb-4">
+                <label for="dob" class="form-label">
+                    <i class="fas fa-birthday-cake me-2"></i>DOB
+                </label>
+                <input type="date" class="form-control form-control-lg" id="dob" name="dob"
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                       aria-describedby="dobHelp">
+                <div id="dobHelp" class="form-text">Date of birth (optional).</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label for="gender" class="form-label">
+                    <i class="fas fa-venus-mars me-2"></i>Gender
+                </label>
+                <select class="form-select form-select-lg" id="gender" name="gender"
+                        style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
+                        aria-describedby="genderHelp">
+                    <option value="">Choose...</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div id="genderHelp" class="form-text">Select the gender (optional).</div>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-6 mb-4">
