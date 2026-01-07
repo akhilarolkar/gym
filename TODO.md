@@ -1,7 +1,3 @@
-- [ ] Add Age and Gender columns to the member table in member_list.html
-- [ ] Add age and gender fields to the add member modal in member_list.html
-- [ ] Add age, gender, and phone_number fields to the edit member modal in member_list.html
-- [ ] Update editMember JS function to handle age and gender parameters
-- [ ] Update onclick for edit button to pass age and gender
-- [ ] Update views.py add_member function to retrieve age and gender from POST
-- [ ] Update views.py member_list add action to retrieve age and gender from POST
+- [ ] Remove text from import button, keep only icon
+- [ ] Remove text from export button, keep only icon
+- [ ] Add flex-grow-1 class to search input to expand it

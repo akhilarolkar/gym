@@ -3,10 +3,9 @@
 {% block title %}Add Member - Gym Management{% endblock %}
 
 {% block content %}
-<div class="content-wrapper mx-auto" style="max-width: 600px;">
+<div class="content-wrapper mx-auto" style="max-width: 600px; padding: 1rem; margin: 1rem auto;">
     <div class="text-center mb-4">
         <h1 class="mb-0"><i class="fas fa-user-plus me-2"></i>Add New Member</h1>
-        <p class="text-muted">Fill in the details to add a new gym member.</p>
     </div>
 
     <form method="post" novalidate>
@@ -17,51 +16,43 @@
             </div>
         {% endif %}
         <div class="row">
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="name" class="form-label">
                     <i class="fas fa-user me-2"></i>Name
                 </label>
-                <input type="text" class="form-control form-control-lg" id="name" name="name" required
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="nameHelp">
-                <div id="nameHelp" class="form-text">Enter the full name of the member.</div>
+                <input type="text" class="form-control" id="name" name="name" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="email" class="form-label">
                     <i class="fas fa-envelope me-2"></i>Email
                 </label>
-                <input type="email" class="form-control form-control-lg" id="email" name="email" required
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="emailHelp">
-                <div id="emailHelp" class="form-text">Enter a valid email address.</div>
+                <input type="email" class="form-control" id="email" name="email" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
         </div>
         <div class="row">
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="phone_number" class="form-label">
                     <i class="fas fa-phone me-2"></i>Phone Number
                 </label>
-                <input type="tel" class="form-control form-control-lg" id="phone_number" name="phone_number"
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="phoneHelp">
-                <div id="phoneHelp" class="form-text">Enter the phone number (optional).</div>
+                <input type="tel" class="form-control" id="phone_number" name="phone_number"
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="dob" class="form-label">
                     <i class="fas fa-birthday-cake me-2"></i>DOB
                 </label>
-                <input type="date" class="form-control form-control-lg" id="dob" name="dob"
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="dobHelp">
-                <div id="dobHelp" class="form-text">Date of birth (optional).</div>
+                <input type="date" class="form-control" id="dob" name="dob"
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
         </div>
         <div class="row">
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="gender" class="form-label">
                     <i class="fas fa-venus-mars me-2"></i>Gender
                 </label>
-                <select class="form-select form-select-lg" id="gender" name="gender"
+                <select class="form-select" id="gender" name="gender"
                         style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
                         aria-describedby="genderHelp">
                     <option value="">Choose...</option>
@@ -73,57 +64,48 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="join_date" class="form-label">
                     <i class="fas fa-calendar-alt me-2"></i>Join Date
                 </label>
-                <input type="date" class="form-control form-control-lg" id="join_date" name="join_date" required
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="joinDateHelp">
-                <div id="joinDateHelp" class="form-text">Select the date the member joined.</div>
+                <input type="date" class="form-control" id="join_date" name="join_date" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="membership_type" class="form-label">
                     <i class="fas fa-id-card me-2"></i>Membership Type
                 </label>
-                <select class="form-select form-select-lg" id="membership_type" name="membership_type" required
-                        style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                        aria-describedby="membershipTypeHelp">
+                <select class="form-select" id="membership_type" name="membership_type" required
+                        style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
                     <option value="">Choose...</option>
                     <option value="strength">Strength</option>
                     <option value="cardio">Cardio</option>
                     <option value="crossfit">Crossfit</option>
                 </select>
-                <div id="membershipTypeHelp" class="form-text">Select the type of membership.</div>
             </div>
         </div>
         <div class="row">
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="membership_start_date" class="form-label">
                     <i class="fas fa-calendar-plus me-2"></i>Membership Start Date
                 </label>
-                <input type="date" class="form-control form-control-lg" id="membership_start_date" name="membership_start_date" required
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="startDateHelp">
-                <div id="startDateHelp" class="form-text">When does the membership start?</div>
+                <input type="date" class="form-control" id="membership_start_date" name="membership_start_date" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
-            <div class="col-md-6 mb-4">
+            <div class="col-md-6 mb-3">
                 <label for="membership_end_date" class="form-label">
                     <i class="fas fa-calendar-times me-2"></i>Membership End Date
                 </label>
-                <input type="date" class="form-control form-control-lg" id="membership_end_date" name="membership_end_date" required
-                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;"
-                       aria-describedby="endDateHelp">
-                <div id="endDateHelp" class="form-text">When does the membership expire?</div>
+                <input type="date" class="form-control" id="membership_end_date" name="membership_end_date" required
+                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
             </div>
         </div>
-        <div class="mb-4 form-check">
+        <div class="mb-3 form-check">
             <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked
                    style="border-radius: 4px; border: 2px solid #e9ecef;">
             <label class="form-check-label" for="is_active">
                 <i class="fas fa-toggle-on me-2"></i>Is Active
             </label>
-            <div class="form-text">Check if the member is currently active.</div>
         </div>
         <div class="text-center">
             <button type="submit" class="btn-modern me-2">

@@ -8,7 +8,7 @@ from datetime import datetime
 from django.db import IntegrityError
 from django.core.paginator import Paginator
 from django.http import HttpResponse
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from .models import Member
 
 def login_view(request):
@@ -109,12 +109,27 @@ def member_list(request):
             Member.objects.filter(id=member_id).delete()
         return redirect('member_list')
     search_query = request.GET.get('search', '')
+    sort_by = request.GET.get('sort_by', 'id')
+    direction = request.GET.get('direction', 'asc')
+
+    # Validate sort_by field
+    allowed_sort_fields = ['id', 'name', 'email', 'join_date', 'membership_type', 'is_active']
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'id'
+
+    # Validate direction
+    if direction not in ['asc', 'desc']:
+        direction = 'asc'
+
+    # Build order_by string
+    order_by_field = f'-{sort_by}' if direction == 'desc' else sort_by
+
     if search_query:
         members = Member.objects.filter(
             Q(name__icontains=search_query) | Q(email__icontains=search_query)
-        ).order_by('id')
+        ).order_by(order_by_field)
     else:
-        members = Member.objects.all().order_by('id')
+        members = Member.objects.all().order_by(order_by_field)
     total_members = Member.objects.count()
     active_members = Member.objects.filter(is_active=True).count()
     inactive_members = total_members - active_members
@@ -125,6 +140,8 @@ def member_list(request):
     context = {
         'members': page_obj,
         'search_query': search_query,
+        'sort_by': sort_by,
+        'direction': direction,
         'total_members': total_members,
         'active_members': active_members,
         'inactive_members': inactive_members,
@@ -166,6 +183,75 @@ def export_excel(request):
     response['Content-Disposition'] = 'attachment; filename=members.xlsx'
     wb.save(response)
     return response
+
+@login_required
+def import_excel(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        try:
+            wb = load_workbook(excel_file)
+            ws = wb.active
+            imported_count = 0
+            errors = []
+            for row in ws.iter_rows(min_row=2, values_only=True):  # Skip header
+                if len(row) < 10:
+                    errors.append("Row has insufficient columns")
+                    continue
+                name, email, phone_number, dob_str, gender, join_date_str, membership_type, membership_start_date_str, membership_end_date_str, is_active_str = row[:10]
+                if not name or not email:
+                    errors.append(f"Name and email are required for row: {row}")
+                    continue
+                if not email.endswith('@gmail.com'):
+                    errors.append(f"Invalid email for {name}: {email}")
+                    continue
+                try:
+                    join_date = datetime.strptime(join_date_str, '%Y-%m-%d').date()
+                    if join_date > timezone.now().date():
+                        errors.append(f"Join date cannot be in the future for {name}")
+                        continue
+                except (ValueError, TypeError):
+                    errors.append(f"Invalid join date format for {name}: {join_date_str}")
+                    continue
+                dob = None
+                if dob_str:
+                    try:
+                        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+                    except (ValueError, TypeError):
+                        errors.append(f"Invalid DOB format for {name}: {dob_str}")
+                        continue
+                try:
+                    membership_start_date = datetime.strptime(membership_start_date_str, '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    errors.append(f"Invalid membership start date format for {name}: {membership_start_date_str}")
+                    continue
+                try:
+                    membership_end_date = datetime.strptime(membership_end_date_str, '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    errors.append(f"Invalid membership end date format for {name}: {membership_end_date_str}")
+                    continue
+                is_active = is_active_str.lower() == 'yes' if is_active_str else False
+                try:
+                    Member.objects.create(
+                        name=name, email=email, phone_number=phone_number or '', dob=dob, gender=gender or '',
+                        join_date=join_date, membership_type=membership_type,
+                        membership_start_date=membership_start_date, membership_end_date=membership_end_date,
+                        is_active=is_active
+                    )
+                    imported_count += 1
+                except IntegrityError:
+                    errors.append(f"Member with email {email} already exists")
+                    continue
+                except Exception as e:
+                    errors.append(f"Error creating member {name}: {str(e)}")
+                    continue
+            if imported_count > 0:
+                messages.success(request, f"Successfully imported {imported_count} members.")
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+        except Exception as e:
+            messages.error(request, f"Error processing file: {str(e)}")
+    return redirect('member_list')
 
 def add_member(request):
     if request.method == 'POST':
