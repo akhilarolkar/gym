@@ -109,8 +109,8 @@ def member_list(request):
             Member.objects.filter(id=member_id).delete()
         return redirect('member_list')
     search_query = request.GET.get('search', '')
-    sort_by = request.GET.get('sort_by', 'id')
-    direction = request.GET.get('direction', 'asc')
+    sort_by = request.GET.get('sort_by', 'join_date')
+    direction = request.GET.get('direction', 'desc')
 
     # Validate sort_by field
     allowed_sort_fields = ['id', 'name', 'email', 'join_date', 'membership_type', 'is_active']

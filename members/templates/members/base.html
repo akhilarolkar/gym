@@ -21,7 +21,7 @@
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: var(--primary-gradient);
+            background: white;
             min-height: 100vh;
             padding-top: 70px;
         }
@@ -47,13 +47,9 @@
         }
 
         .content-wrapper {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             padding: 2rem;
-            margin: 2rem auto;
-            max-width: 1500px;
-            transition: all 0.3s ease;
+            margin: 0;
+            width: 100%;
         }
 
 
@@ -132,27 +128,21 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a class="nav-link" href="{% url 'member_list' %}">
                                 <i class="fas fa-users me-1"></i>Members
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'add_member' %}">
-                                <i class="fas fa-user-plus me-1"></i>Add Member
-                            </a>
-                        </li>
+                        </li> -->
                     {% endif %}
                 </ul>
-                <ul class="navbar-nav">
+                <div class="d-flex justify-content-center flex-grow-1 mx-3">
+                    {% block navbar_center %}{% endblock %}
+                </div>
+                <ul class="navbar-nav d-flex flex-row">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <button id="fullscreenBtn" class="nav-link btn btn-link" onclick="toggleFullscreen()">
-                                <i class="fas fa-expand me-1"></i>Fullscreen
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">
+                        {% block navbar_actions %}{% endblock %}
+                        <li class="nav-item ms-2">
+                            <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm me-2" aria-label="Logout">
                                 <i class="fas fa-sign-out-alt me-1"></i>Logout
                             </a>
                         </li>
@@ -172,11 +162,130 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer">
+    <!-- Add Member Modal -->
+    <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title" id="addMemberModalLabel">
+                        <i class="fas fa-user-plus me-2"></i>Add New Member
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'member_list' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>Name
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="modal_name" name="name" required
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_email" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>Email
+                                </label>
+                                <input type="email" class="form-control form-control-lg" id="modal_email" name="email" required
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_phone_number" class="form-label">
+                                    <i class="fas fa-phone me-2"></i>Phone Number
+                                </label>
+                                <input type="tel" class="form-control form-control-lg" id="modal_phone_number" name="phone_number"
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_dob" class="form-label">
+                                    <i class="fas fa-birthday-cake me-2"></i>DOB
+                                </label>
+                                <input type="date" class="form-control form-control-lg" id="modal_dob" name="dob"
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_gender" class="form-label">
+                                    <i class="fas fa-venus-mars me-2"></i>Gender
+                                </label>
+                                <select class="form-select form-select-lg" id="modal_gender" name="gender"
+                                        style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                    <option value="">Choose...</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_join_date" class="form-label">
+                                    <i class="fas fa-calendar-alt me-2"></i>Join Date
+                                </label>
+                                <input type="date" class="form-control form-control-lg" id="modal_join_date" name="join_date" required
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_membership_type" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>Membership Type
+                                </label>
+                                <select class="form-select form-select-lg" id="modal_membership_type" name="membership_type" required
+                                        style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                    <option value="">Choose membership type...</option>
+                                    <option value="strength">strength</option>
+                                    <option value="cardio">cardio</option>
+                                    <option value="crossfit">crossfit</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_membership_start_date" class="form-label">
+                                    <i class="fas fa-calendar-plus me-2"></i>Membership Start Date
+                                </label>
+                                <input type="date" class="form-control form-control-lg" id="modal_membership_start_date" name="membership_start_date" required
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="modal_membership_end_date" class="form-label">
+                                    <i class="fas fa-calendar-times me-2"></i>Membership End Date
+                                </label>
+                                <input type="date" class="form-control form-control-lg" id="modal_membership_end_date" name="membership_end_date" required
+                                       style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="modal_is_active" name="is_active" checked>
+                                    <label class="form-check-label" for="modal_is_active">
+                                        <i class="fas fa-toggle-on me-2"></i>Is Active
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-save me-2"></i>Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- <footer class="footer">
         <div class="container">
             <p>&copy; Gym Management System. All rights reserved.</p>
         </div>
-    </footer>
+    </footer> -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

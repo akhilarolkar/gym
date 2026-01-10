@@ -2,7 +2,149 @@
 
 {% block title %}Gym Members - Dashboard{% endblock %}
 
+{% block navbar_center %}{% endblock %}
+
+{% block navbar_actions %}
+{% if user.is_authenticated %}
+    <li class="nav-item">
+        <form method="get" class="d-flex me-2">
+            <input type="text" name="search" class="form-control me-1" placeholder="Search members..." value="{{ search_query }}" style="width: 200px; height: 31px;">
+            <button type="submit" class="btn btn-outline-primary btn-sm" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            {% if search_query %}
+                <a href="?sort_by={{ sort_by }}&direction={{ direction }}" class="btn btn-outline-secondary btn-sm ms-1" aria-label="Clear">
+                    <i class="fas fa-times"></i>
+                </a>
+            {% endif %}
+        </form>
+    </li>
+    <li class="nav-item">
+        <button type="button" class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addMemberModal" aria-label="Add Member">
+            <i class="fas fa-user-plus me-1"></i>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button type="button" class="btn btn-outline-info btn-sm me-2" data-bs-toggle="modal" data-bs-target="#importExcelModal" aria-label="Import from Excel">
+            <i class="fas fa-file-import me-1"></i>Import
+        </button>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'export_excel' %}" class="btn btn-outline-success btn-sm me-2" aria-label="Export to Excel">
+            <i class="fas fa-file-excel me-1"></i>Export
+        </a>
+    </li>
+{% endif %}
+{% endblock %}
+
 {% block content %}
+<style>
+.dashboard-card {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid transparent;
+    background: transparent;
+    box-shadow: none;
+    margin-bottom: 1rem;
+}
+
+.dashboard-card:nth-child(1) {
+    border-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) 1;
+}
+
+.dashboard-card:nth-child(2) {
+    border-image: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) 1;
+}
+
+.dashboard-card:nth-child(3) {
+    border-image: linear-gradient(135deg, #FF9800 0%, #F57C00 100%) 1;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.dashboard-card:hover::before {
+    opacity: 0.1;
+}
+
+.icon-wrapper {
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.1rem auto;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover .icon-wrapper {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.dashboard-card .card-title {
+    font-size: 1.2rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    font-weight: 700;
+    margin-bottom: 0.05rem;
+}
+
+.dashboard-card .card-text {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+.content-wrapper {
+    padding: 2rem;
+    margin: 0;
+    width: 100%;
+}
+
+.table td, .table th {
+    padding: 0.15rem 0.3rem;
+    vertical-align: middle;
+    font-size: 0.8rem;
+}
+
+.table-responsive {
+    max-height: 35vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        margin: 0.5rem !important;
+        padding: 0.5rem !important;
+    }
+
+    .dashboard-card {
+        margin-bottom: 0.5rem;
+    }
+
+    .table-responsive {
+        max-height: 50vh;
+    }
+}
+</style>
 <div class="content-wrapper">
     {% if messages %}
         {% for message in messages %}
@@ -12,41 +154,46 @@
             </div>
         {% endfor %}
     {% endif %}
-    <div class="text-center mb-4">
+    <div class="text-center mb-2">
         <h1 class="mb-0"><i class="fas fa-dumbbell me-2"></i>Gym Members Dashboard</h1>
-        <p class="text-muted">Manage gym members efficiently</p>
+        <!-- <p class="text-muted">Manage gym members efficiently</p> -->
     </div>
 
     <!-- Statistics Cards -->
     <div class="row mb-4 justify-content-center">
         <div class="col-md-4 mb-3">
-            <div class="card text-white bg-primary h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-2x mb-2"></i>
-                    <h4 class="card-title">{{ total_members }}</h4>
-                    <p class="card-text">Total Members</p>
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center text-dark">
+                    <div class="icon-wrapper mb-3">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                    <h2 class="card-title mb-1">{{ total_members }}</h2>
+                    <p class="card-text mb-0">Total Members</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card text-white bg-success h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-user-check fa-2x mb-2"></i>
-                    <h4 class="card-title">{{ active_members }}</h4>
-                    <p class="card-text">Active Members</p>
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center text-dark">
+                    <div class="icon-wrapper mb-3">
+                        <i class="fas fa-user-check fa-3x"></i>
+                    </div>
+                    <h2 class="card-title mb-1">{{ active_members }}</h2>
+                    <p class="card-text mb-0">Active Members</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card text-white bg-warning h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-user-times fa-2x mb-2"></i>
-                    <h4 class="card-title">{{ inactive_members }}</h4>
-                    <p class="card-text">Inactive Members</p>
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center text-dark">
+                    <div class="icon-wrapper mb-3">
+                        <i class="fas fa-user-times fa-3x"></i>
+                    </div>
+                    <h2 class="card-title mb-1">{{ inactive_members }}</h2>
+                    <p class="card-text mb-0">Inactive Members</p>
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Membership Type Distribution -->
@@ -83,29 +230,6 @@
                 <p class="text-muted">Start by adding your first gym member!</p>
             </div>
         {% endif %}
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <form method="get" class="d-flex">
-                        <input type="text" name="search" class="form-control me-2 flex-grow-1" placeholder="Search members by name or email..." value="{{ search_query }}">
-                        <button type="submit" class="btn btn-outline-primary" aria-label="Search">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        {% if search_query %}
-                            <a href="?sort_by={{ sort_by }}&direction={{ direction }}" class="btn btn-outline-secondary ms-2" aria-label="Clear">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        {% endif %}
-                    </form>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importExcelModal" aria-label="Import from Excel">
-                            <i class="fas fa-file-import"></i>
-                        </button>
-                        <a href="{% url 'export_excel' %}" class="btn btn-success" aria-label="Export to Excel">
-                            <i class="fas fa-file-excel"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
         {% if not search_query and not members %}
         {% else %}
             <div class="table-responsive">
@@ -270,118 +394,13 @@
 
     </div>
 
-    <!-- Add Member Modal -->
-    <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white;">
-                    <h5 class="modal-title" id="addMemberModalLabel">
-                        <i class="fas fa-user-plus me-2"></i>Add New Member
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="add">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">
-                                <i class="fas fa-user me-2"></i>Name
-                            </label>
-                            <input type="text" class="form-control form-control-lg" id="name" name="name" required
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email
-                            </label>
-                            <input type="email" class="form-control form-control-lg" id="email" name="email" required
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone_number" class="form-label">
-                                <i class="fas fa-phone me-2"></i>Phone Number
-                            </label>
-                            <input type="tel" class="form-control form-control-lg" id="phone_number" name="phone_number"
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3">
-                            <label for="dob" class="form-label">
-                                <i class="fas fa-birthday-cake me-2"></i>DOB
-                            </label>
-                            <input type="date" class="form-control form-control-lg" id="dob" name="dob"
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3">
-                            <label for="gender" class="form-label">
-                                <i class="fas fa-venus-mars me-2"></i>Gender
-                            </label>
-                            <select class="form-select form-select-lg" id="gender" name="gender"
-                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                                <option value="">Choose...</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="join_date" class="form-label">
-                                <i class="fas fa-calendar-alt me-2"></i>Join Date
-                            </label>
-                            <input type="date" class="form-control form-control-lg" id="join_date" name="join_date" required
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3">
-                            <label for="membership_type" class="form-label">
-                                <i class="fas fa-id-card me-2"></i>Membership Type
-                            </label>
-                            <select class="form-select form-select-lg" id="membership_type" name="membership_type" required
-                                    style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                                <option value="">Choose membership type...</option>
-                                <option value="strength">strength</option>
-                                <option value="cardio">cardio</option>
-                                <option value="crossfit">crossfit</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="membership_start_date" class="form-label">
-                                <i class="fas fa-calendar-plus me-2"></i>Membership Start Date
-                            </label>
-                            <input type="date" class="form-control form-control-lg" id="membership_start_date" name="membership_start_date" required
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3">
-                            <label for="membership_end_date" class="form-label">
-                                <i class="fas fa-calendar-times me-2"></i>Membership End Date
-                            </label>
-                            <input type="date" class="form-control form-control-lg" id="membership_end_date" name="membership_end_date" required
-                                   style="border-radius: 10px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
-                            <label class="form-check-label" for="is_active">
-                                <i class="fas fa-toggle-on me-2"></i>Is Active
-                            </label>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </button>
-                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 25px; padding: 0.5rem 2rem;">
-                            <i class="fas fa-save me-2"></i>Add Member
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Edit Member Modal -->
     <div class="modal fade" id="editMemberModal" tabindex="-1" aria-labelledby="editMemberModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #2196F3, #21CBF3); color: white;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <h5 class="modal-title" id="editMemberModalLabel">
                         <i class="fas fa-user-edit me-2"></i>Edit Member Details
                     </h5>
@@ -485,10 +504,10 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
                             <i class="fas fa-times me-2"></i>Cancel
                         </button>
-                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #2196F3, #21CBF3); color: white; border: none; border-radius: 25px; padding: 0.5rem 2rem;">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-save me-2"></i>Update
                         </button>
                     </div>
@@ -531,7 +550,7 @@
     <div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <h5 class="modal-title" id="importExcelModalLabel">
                         <i class="fas fa-file-import me-2"></i>Import Members from Excel
                     </h5>
@@ -561,10 +580,10 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
                             <i class="fas fa-times me-2"></i>Cancel
                         </button>
-                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 25px; padding: 0.5rem 2rem;">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-upload me-2"></i>Import
                         </button>
                     </div>
@@ -577,14 +596,16 @@
     <script>
         // Focus on first input when modal opens
         const addMemberModal = document.getElementById('addMemberModal');
-        addMemberModal.addEventListener('shown.bs.modal', function () {
-            document.getElementById('name').focus();
-        });
+        if (addMemberModal) {
+            addMemberModal.addEventListener('shown.bs.modal', function () {
+                document.getElementById('modal_name').focus();
+            });
 
-        // Reset form when modal is closed
-        addMemberModal.addEventListener('hidden.bs.modal', function () {
-            document.querySelector('#addMemberModal form').reset();
-        });
+            // Reset form when modal is closed
+            addMemberModal.addEventListener('hidden.bs.modal', function () {
+                document.querySelector('#addMemberModal form').reset();
+            });
+        }
 
         // Edit member function
         function editMember(id, name, email, phoneNumber, dob, gender, joinDate, membershipType, startDate, endDate, isActive) {
