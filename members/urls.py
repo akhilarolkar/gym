@@ -8,4 +8,5 @@ urlpatterns = [
 
     path('export_excel/', views.export_excel, name='export_excel'),
     path('import_excel/', views.import_excel, name='import_excel'),
+    path('generate_invoice_pdf/<int:member_id>/', views.generate_invoice_pdf, name='generate_invoice_pdf'),
 ]

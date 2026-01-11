@@ -9,6 +9,11 @@ from django.db import IntegrityError
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from openpyxl import Workbook, load_workbook
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 from .models import Member
 
 def login_view(request):
@@ -288,3 +293,144 @@ def add_member(request):
             return render(request, 'members/add_member.html', {'error': 'A member with this email already exists.'})
         return redirect('member_list')
     return render(request, 'members/add_member.html')
+
+@login_required
+def generate_invoice_pdf(request, member_id):
+    try:
+        member = Member.objects.get(id=member_id)
+    except Member.DoesNotExist:
+        messages.error(request, 'Member not found.')
+        return redirect('member_list')
+
+    # Define membership pricing
+    membership_prices = {
+        'strength': 50.00,
+        'cardio': 40.00,
+        'crossfit': 60.00,
+    }
+
+    # Calculate charges
+    price_per_month = membership_prices.get(member.membership_type.lower(), 50.00)
+    duration_days = (member.membership_end_date - member.membership_start_date).days
+    duration_months = max(1, round(duration_days / 30))  # Approximate months
+    total_amount = price_per_month * duration_months
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{member.id}_{timezone.now().date()}.pdf"'
+
+    # Create PDF document
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    styles = getSampleStyleSheet()
+
+    # Custom styles
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=1  # Center
+    )
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=20
+    )
+    normal_style = styles['Normal']
+
+    # Build PDF content
+    content = []
+
+    # Title
+    content.append(Paragraph("Gym Membership Invoice", title_style))
+    content.append(Spacer(1, 12))
+
+    # Invoice details
+    invoice_number = f"INV-{member.id}-{timezone.now().strftime('%Y%m%d')}"
+    invoice_date = timezone.now().strftime('%B %d, %Y')
+
+    content.append(Paragraph(f"<b>Invoice Number:</b> {invoice_number}", normal_style))
+    content.append(Paragraph(f"<b>Invoice Date:</b> {invoice_date}", normal_style))
+    content.append(Spacer(1, 12))
+
+    # Member information
+    content.append(Paragraph("Member Information", header_style))
+    member_info = [
+        ["Name:", member.name],
+        ["Email:", member.email],
+        ["Phone:", member.phone_number or 'N/A'],
+        ["Date of Birth:", member.dob.strftime('%Y-%m-%d') if member.dob else 'N/A'],
+        ["Gender:", member.gender or 'N/A'],
+        ["Join Date:", member.join_date.strftime('%Y-%m-%d')],
+    ]
+
+    member_table = Table(member_info, colWidths=[2*inch, 4*inch])
+    member_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    content.append(member_table)
+    content.append(Spacer(1, 12))
+
+    # Membership details
+    content.append(Paragraph("Membership Details", header_style))
+    membership_info = [
+        ["Membership Type:", member.membership_type.title()],
+        ["Start Date:", member.membership_start_date.strftime('%Y-%m-%d')],
+        ["End Date:", member.membership_end_date.strftime('%Y-%m-%d')],
+        ["Status:", "Active" if member.is_active else "Inactive"],
+    ]
+
+    membership_table = Table(membership_info, colWidths=[2*inch, 4*inch])
+    membership_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    content.append(membership_table)
+    content.append(Spacer(1, 12))
+
+    # Charges
+    content.append(Paragraph("Charges", header_style))
+    charges_data = [
+        ["Description", "Quantity", "Unit Price", "Total"],
+        [f"{member.membership_type.title()} Membership", f"{duration_months} month(s)", f"${price_per_month:.2f}", f"${total_amount:.2f}"],
+        ["", "", "Total Amount:", f"${total_amount:.2f}"],
+    ]
+
+    charges_table = Table(charges_data, colWidths=[3*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+    charges_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (3, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    content.append(charges_table)
+    content.append(Spacer(1, 12))
+
+    # Footer
+    content.append(Paragraph("Thank you for choosing our gym!", normal_style))
+    content.append(Paragraph("Please keep this invoice for your records.", normal_style))
+
+    # Build PDF
+    doc.build(content)
+    return response

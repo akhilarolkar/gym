@@ -328,6 +328,9 @@
                                 {% endif %}
                             </td>
                             <td>
+                                <a href="{% url 'generate_invoice_pdf' member.id %}" class="btn btn-sm btn-outline-success me-2" title="Generate Invoice PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
                                 <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editMemberModal" onclick="editMember({{ member.id }}, '{{ member.name|escapejs }}', '{{ member.email|escapejs }}', '{{ member.phone_number|escapejs }}', '{{ member.dob|date:"Y-m-d"|default:"" }}', '{{ member.gender|escapejs }}', '{{ member.join_date|date:"Y-m-d" }}', '{{ member.membership_type|escapejs }}', '{{ member.membership_start_date|date:"Y-m-d" }}', '{{ member.membership_end_date|date:"Y-m-d" }}', {{ member.is_active|lower }})">
                                     <i class="fas fa-edit"></i>
                                 </button>
