@@ -291,6 +291,8 @@
     <script>
         function showLoading() {
             document.getElementById('loadingSpinner').style.display = 'flex';
+            // Hide the spinner after 10 seconds in case the page doesn't reload
+            setTimeout(hideLoading, 10000);
         }
 
         function hideLoading() {
@@ -299,6 +301,7 @@
 
         // Add loading spinner to forms
         document.addEventListener('DOMContentLoaded', function() {
+            hideLoading(); // Ensure spinner is hidden on page load
             const forms = document.querySelectorAll('form');
             forms.forEach(form => {
                 form.addEventListener('submit', showLoading);

@@ -7,9 +7,9 @@ from django.utils import timezone
 from datetime import datetime
 from django.db import IntegrityError
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from openpyxl import Workbook, load_workbook
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
@@ -295,7 +295,9 @@ def add_member(request):
     return render(request, 'members/add_member.html')
 
 @login_required
+@login_required
 def generate_invoice_pdf(request, member_id):
+    send_email = request.GET.get('send_email') == 'true'
     try:
         member = Member.objects.get(id=member_id)
     except Member.DoesNotExist:
@@ -309,18 +311,63 @@ def generate_invoice_pdf(request, member_id):
         'crossfit': 60.00,
     }
 
-    # Calculate charges
-    price_per_month = membership_prices.get(member.membership_type.lower(), 50.00)
-    duration_days = (member.membership_end_date - member.membership_start_date).days
-    duration_months = max(1, round(duration_days / 30))  # Approximate months
-    total_amount = price_per_month * duration_months
+    # Check if POST data is provided (from modal)
+    if request.method == 'POST':
+        membership_start_date = request.POST.get('membership_start_date')
+        membership_end_date = request.POST.get('membership_end_date')
+        membership_type = request.POST.get('membership_type')
+        is_active = request.POST.get('is_active') == 'on'
+        payment_amount = request.POST.get('payment_amount')
+        payment_mode = request.POST.get('payment_mode')
+        transaction_id = request.POST.get('transaction_id')
+        comments = request.POST.get('comments')
+
+        # Parse dates
+        try:
+            membership_start_date = datetime.strptime(membership_start_date, '%Y-%m-%d').date()
+            membership_end_date = datetime.strptime(membership_end_date, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, 'Invalid date format.')
+            return redirect('member_list')
+
+        # Update member data with the new values
+        member.membership_start_date = membership_start_date
+        member.membership_end_date = membership_end_date
+        member.membership_type = membership_type
+        member.is_active = is_active
+        member.fees_amount = request.POST.get('fees_amount') or payment_amount
+        member.payment_mode = request.POST.get('payment_mode')
+        member.transaction_id = request.POST.get('transaction_id')
+        member.comments = request.POST.get('comments')
+        member.save()
+
+        # Use POST data for calculations
+        price_per_month = membership_prices.get(membership_type.lower(), 50.00)
+        duration_days = (membership_end_date - membership_start_date).days
+        duration_months = max(1, round(duration_days / 30))  # Approximate months
+        total_amount = price_per_month * duration_months
+    else:
+        # Use member data (original behavior)
+        membership_start_date = member.membership_start_date
+        membership_end_date = member.membership_end_date
+        membership_type = member.membership_type
+        is_active = member.is_active
+        payment_amount = None
+        payment_mode = None
+        transaction_id = None
+
+        # Calculate charges
+        price_per_month = membership_prices.get(member.membership_type.lower(), 50.00)
+        duration_days = (member.membership_end_date - member.membership_start_date).days
+        duration_months = max(1, round(duration_days / 30))  # Approximate months
+        total_amount = price_per_month * duration_months
 
     # Create PDF response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="invoice_{member.id}_{timezone.now().date()}.pdf"'
 
-    # Create PDF document
-    doc = SimpleDocTemplate(response, pagesize=letter)
+    # Create PDF document with A4 page size to fit on one page
+    doc = SimpleDocTemplate(response, pagesize=A4)
     styles = getSampleStyleSheet()
 
     # Custom styles
@@ -342,9 +389,14 @@ def generate_invoice_pdf(request, member_id):
     # Build PDF content
     content = []
 
+    # Company Header
+    content.append(Paragraph("<b>A1 Lift and Fit hub unisex Gym</b>", ParagraphStyle('Company', parent=styles['Heading2'], fontSize=14, alignment=1, spaceAfter=10)))
+    content.append(Paragraph("123 Fitness Street, Health City, India - 400001", ParagraphStyle('Address', parent=styles['Normal'], alignment=1, spaceAfter=5)))
+    content.append(Paragraph("Phone: +91-9876543210 | Email: info@fitnessprogym.com", ParagraphStyle('Contact', parent=styles['Normal'], alignment=1, spaceAfter=10)))
+
     # Title
-    content.append(Paragraph("Gym Membership Invoice", title_style))
-    content.append(Spacer(1, 12))
+    # content.append(Paragraph("Gym Membership Invoice", title_style))
+    # content.append(Spacer(1, 12))
 
     # Invoice details
     invoice_number = f"INV-{member.id}-{timezone.now().strftime('%Y%m%d')}"
@@ -352,7 +404,7 @@ def generate_invoice_pdf(request, member_id):
 
     content.append(Paragraph(f"<b>Invoice Number:</b> {invoice_number}", normal_style))
     content.append(Paragraph(f"<b>Invoice Date:</b> {invoice_date}", normal_style))
-    content.append(Spacer(1, 12))
+    content.append(Spacer(1, 10))
 
     # Member information
     content.append(Paragraph("Member Information", header_style))
@@ -377,15 +429,15 @@ def generate_invoice_pdf(request, member_id):
         ('GRID', (0, 0), (-1, -1), 1, colors.black)
     ]))
     content.append(member_table)
-    content.append(Spacer(1, 12))
+    content.append(Spacer(1, 10))
 
     # Membership details
     content.append(Paragraph("Membership Details", header_style))
     membership_info = [
-        ["Membership Type:", member.membership_type.title()],
-        ["Start Date:", member.membership_start_date.strftime('%Y-%m-%d')],
-        ["End Date:", member.membership_end_date.strftime('%Y-%m-%d')],
-        ["Status:", "Active" if member.is_active else "Inactive"],
+        ["Membership Type:", membership_type.title()],
+        ["Start Date:", membership_start_date.strftime('%Y-%m-%d')],
+        ["End Date:", membership_end_date.strftime('%Y-%m-%d')],
+        ["Status:", "Active" if is_active else "Inactive"],
     ]
 
     membership_table = Table(membership_info, colWidths=[2*inch, 4*inch])
@@ -402,35 +454,89 @@ def generate_invoice_pdf(request, member_id):
     content.append(membership_table)
     content.append(Spacer(1, 12))
 
-    # Charges
-    content.append(Paragraph("Charges", header_style))
-    charges_data = [
-        ["Description", "Quantity", "Unit Price", "Total"],
-        [f"{member.membership_type.title()} Membership", f"{duration_months} month(s)", f"${price_per_month:.2f}", f"${total_amount:.2f}"],
-        ["", "", "Total Amount:", f"${total_amount:.2f}"],
-    ]
+    # Payment Details (only if POST data is provided)
+    if request.method == 'POST' and (member.fees_amount or member.payment_mode or member.transaction_id):
+        content.append(Paragraph("Payment Details", header_style))
+        payment_info = [
+            ["Fees Amount:", f"Rupees {member.fees_amount} /-" if member.fees_amount else 'N/A'],
+            ["Payment Mode:", member.payment_mode.title() if member.payment_mode else 'N/A'],
+            ["Transaction ID:", member.transaction_id or 'N/A'],
+        ]
 
-    charges_table = Table(charges_data, colWidths=[3*inch, 1.5*inch, 1.5*inch, 1.5*inch])
-    charges_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('ALIGN', (1, 0), (3, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
-    content.append(charges_table)
-    content.append(Spacer(1, 12))
+        payment_table = Table(payment_info, colWidths=[2*inch, 4*inch])
+        payment_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        content.append(payment_table)
+        content.append(Spacer(1, 12))
+
+
+    # Comments (only if provided)
+    if request.method == 'POST' and comments:
+        content.append(Paragraph("Comments", header_style))
+        comments_info = [
+            ["Comments:", comments],
+        ]
+
+        comments_table = Table(comments_info, colWidths=[2*inch, 4*inch])
+        comments_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        content.append(comments_table)
+        content.append(Spacer(1, 12))
 
     # Footer
-    content.append(Paragraph("Thank you for choosing our gym!", normal_style))
-    content.append(Paragraph("Please keep this invoice for your records.", normal_style))
+    content.append(Paragraph("Terms & Conditions:", ParagraphStyle('FooterHeader', parent=styles['Heading3'], fontSize=12, spaceAfter=10)))
+    # content.append(Paragraph("• Payment is due within 7 days of invoice date.", normal_style))
+    # content.append(Paragraph("• Late payments may incur additional charges.", normal_style))
+    content.append(Paragraph("• Membership is non-transferable and non-refundable.", normal_style))
+    content.append(Spacer(1, 12))
+    content.append(Paragraph("Thank you for choosing A1 Lift and Fit hub unisex Gym!", ParagraphStyle('ThankYou', parent=styles['Normal'], alignment=1, fontSize=12, spaceAfter=5)))
+    content.append(Paragraph("Please keep this invoice for your records.", ParagraphStyle('Record', parent=styles['Normal'], alignment=1, fontSize=10)))
 
     # Build PDF
     doc.build(content)
-    return response
+
+    if send_email:
+        from django.core.mail import EmailMessage
+        from io import BytesIO
+
+        # Create PDF in memory
+        pdf_buffer = BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=A4)
+        doc.build(content)
+        pdf_buffer.seek(0)
+
+        # Send email
+        subject = f"Gym Membership Invoice - {member.name}"
+        message = f"Dear {member.name},\n\nPlease find attached your gym membership invoice.\n\nThank you for choosing A1 Lift and Fit hub unisex Gym!\n\nBest regards,\nA1 Lift and Fit hub unisex Gym"
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[member.email],
+        )
+        email.attach(f"invoice_{member.id}_{timezone.now().date()}.pdf", pdf_buffer.getvalue(), 'application/pdf')
+        try:
+            email.send()
+            messages.success(request, f'Invoice PDF has been sent to {member.email}.')
+        except Exception as e:
+            messages.error(request, f'Failed to send email: {str(e)}')
+        return redirect('member_list')
+    else:
+        return response
+

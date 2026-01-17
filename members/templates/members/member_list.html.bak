@@ -605,7 +605,7 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="post" id="generatePdfForm" action="{% url 'generate_invoice_pdf' 0 %}">
+                <form method="post" id="generatePdfForm" action="{% url 'generate_invoice_pdf' 0 %}" target="_blank"> target="_blank"
                     {% csrf_token %}
                     <input type="hidden" id="pdf_member_id" name="member_id">
                     <div class="modal-body">
