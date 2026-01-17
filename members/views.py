@@ -8,6 +8,7 @@ from datetime import datetime
 from django.db import IntegrityError
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
+from django.conf import settings
 from openpyxl import Workbook, load_workbook
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -295,9 +296,8 @@ def add_member(request):
     return render(request, 'members/add_member.html')
 
 @login_required
-@login_required
 def generate_invoice_pdf(request, member_id):
-    send_email = request.GET.get('send_email') == 'true'
+    send_email = request.GET.get('send_email') == 'true' or request.POST.get('send_email') == 'on'
     try:
         member = Member.objects.get(id=member_id)
     except Member.DoesNotExist:
@@ -362,12 +362,11 @@ def generate_invoice_pdf(request, member_id):
         duration_months = max(1, round(duration_days / 30))  # Approximate months
         total_amount = price_per_month * duration_months
 
-    # Create PDF response
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="invoice_{member.id}_{timezone.now().date()}.pdf"'
+    # Generate PDF content
+    from io import BytesIO
 
-    # Create PDF document with A4 page size to fit on one page
-    doc = SimpleDocTemplate(response, pagesize=A4)
+    pdf_buffer = BytesIO()
+    doc = SimpleDocTemplate(pdf_buffer, pagesize=A4)
     styles = getSampleStyleSheet()
 
     # Custom styles
@@ -508,18 +507,13 @@ def generate_invoice_pdf(request, member_id):
     content.append(Paragraph("Thank you for choosing A1 Lift and Fit hub unisex Gym!", ParagraphStyle('ThankYou', parent=styles['Normal'], alignment=1, fontSize=12, spaceAfter=5)))
     content.append(Paragraph("Please keep this invoice for your records.", ParagraphStyle('Record', parent=styles['Normal'], alignment=1, fontSize=10)))
 
-    # Build PDF
+    # Build PDF once
     doc.build(content)
+    pdf_buffer.seek(0)
+    pdf_data = pdf_buffer.getvalue()
 
     if send_email:
         from django.core.mail import EmailMessage
-        from io import BytesIO
-
-        # Create PDF in memory
-        pdf_buffer = BytesIO()
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=A4)
-        doc.build(content)
-        pdf_buffer.seek(0)
 
         # Send email
         subject = f"Gym Membership Invoice - {member.name}"
@@ -530,7 +524,7 @@ def generate_invoice_pdf(request, member_id):
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[member.email],
         )
-        email.attach(f"invoice_{member.id}_{timezone.now().date()}.pdf", pdf_buffer.getvalue(), 'application/pdf')
+        email.attach(f"invoice_{member.id}_{timezone.now().date()}.pdf", pdf_data, 'application/pdf')
         try:
             email.send()
             messages.success(request, f'Invoice PDF has been sent to {member.email}.')
@@ -538,5 +532,9 @@ def generate_invoice_pdf(request, member_id):
             messages.error(request, f'Failed to send email: {str(e)}')
         return redirect('member_list')
     else:
+        # Return PDF for download
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="invoice_{member.id}_{timezone.now().date()}.pdf"'
+        response.write(pdf_data)
         return response
 
